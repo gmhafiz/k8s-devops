@@ -1,0 +1,11 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dev
+rules:
+  - apiGroups: ["", "apps"]
+    resources: ["deployments", "replicasets", "pods"] # we allow developers to see deployment, pods, and scale up or down
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"] # You can also use ["*"]
+  - apiGroups: ["", "batch"]
+    resources: ["jobs", "pods/log" ]
+    verbs: ["get", "list",  "create", "delete"]

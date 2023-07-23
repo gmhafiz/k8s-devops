@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-job
+spec:
+  template:
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: migrate
+          image: gmhafiz/migrate:10445445cb111e03200b8fb2bd2d61b910f9e5d8
+          command:
+            - migrate
+          args:
+            - -go
+            - up
+          envFrom:
+            - configMapRef:
+                name: api-parameters
+          env:
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: POSTGRES_PASSWORD

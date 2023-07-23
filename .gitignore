@@ -1,0 +1,7 @@
+/.idea/
+*.iml
+
+*.crt
+*.key
+*.csr
+*.srl

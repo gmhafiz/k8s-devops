@@ -1,0 +1,12 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dev-role-binding
+subjects:
+  - kind: User
+    name: dev007
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: dev # must match with Role's metadata.name
+  apiGroup: ""

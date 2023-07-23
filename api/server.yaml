@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: server
+  name: server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: server
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+      - image: gmhafiz/api:10445445cb111e03200b8fb2bd2d61b910f9e5d8
+        name: api
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "128Mi"
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3080
+          successThreshold: 3
+        envFrom:
+          - configMapRef:
+              name: api-parameters
+        env:
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secret-config
+                key: POSTGRES_PASSWORD

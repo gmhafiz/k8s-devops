@@ -19,8 +19,11 @@ spec:
         app: server
     spec:
       containers:
-      - image: gmhafiz/api:10445445cb111e03200b8fb2bd2d61b910f9e5d8
+      - image: gmhafiz/api:7f7bec15ce619a43a2ecb75dc3d56673322174f5
         name: api
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
         resources:
           limits:
             cpu: "500m"

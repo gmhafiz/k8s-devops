@@ -5,10 +5,10 @@ metadata:
 spec:
   template:
     spec:
-      restartPolicy: Always
+      restartPolicy: Never
       containers:
         - name: migrate
-          image: gmhafiz/migrate:10445445cb111e03200b8fb2bd2d61b910f9e5d8
+          image: gmhafiz/migrate:64fb47c905fa972785cae506095f09af25543e2d
           command:
             - migrate
           args:

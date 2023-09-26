@@ -1,13 +1,45 @@
 ```sh
-#kubectl apply -f secret.yaml
+#kubectl apply -f secret.yaml # use SealedSecret instead
 kubectl apply -f configmap.yaml
 kubectl apply -f pv.yaml
 kubectl apply -f pvc.yaml
+```
+
+Install SealedSecret
+
+```sh
+mkdir -p ~/Downloads/kubeseal
+cd ~/Downloads/kubeseal
+wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.22.0/kubeseal-0.22.0-darwin-amd64.tar.gz
+tar -xvzf kubeseal-0.22.0-darwin-amd64.tar.gz
+sudo install -m 755 kubeseal /usr/local/bin/kubeseal
+```
+
+Install SealedSecret controller to k8s
+
+```sh
+kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.22.0/controller.yaml
+```
+
+Create SealedSecret object from our `secret.yaml`
+
+```sh
+cat secrets.yaml | kubeseal \
+--controller-namespace kube-system \
+--controller-name sealed-secrets-controller \
+--format yaml \
+> sealed-secrets.yaml
+```
+
+Apply SealedSecret along with the rest of yaml files
+
+```sh
 kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml
 ```
 
 ```sh
+alias k=kubectl
 k get po
 ```
 
@@ -29,33 +61,26 @@ PostgreSQL Database directory appears to contain a database; Skipping initializa
 Connect
 
 ```sh
-export POSTGRES_PASSWORD=$(kubectl get cm --namespace default db-credentials -o jsonpath="{.data.POSTGRES_PASSWORD}")
+export POSTGRES_PASSWORD=$(kubectl get secret postgres-secret-config -o jsonpath="{.data.POSTGRES_PASSWORD}" | base64 -d)
 
-kubectl run psql-client --rm --tty -i --restart='Never' --namespace default --image postgres:15.3 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
-      --command -- psql --host postgres -U app1 -d app_db -p 5432
+kubectl run psql-client --rm --tty -i --restart='Never' \
+  --namespace default \
+  --image postgres:16.0 \
+  --env="PGPASSWORD=$POSTGRES_PASSWORD" \
+  --command -- psql --host postgres -U user -d my_db -p 5432
 ```
 
-Port Forward
+Quit psql-client
+
+```
+\q
+```
+
+Port Forward to port 45432 in your computer
 
 ```sh
 kubectl port-forward --namespace default svc/postgres 45432:5432 &
     PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U app1 -d app_db -p 5432
-```
-
-
-# Migrate
-
-```sh
-export DB_HOST=$(kubectl get secret --namespace default postgres-secret-config -o jsonpath="{.data.host}" | base64 -d)
-export DB_PORT=$( kubectl get secret --namespace default postgres-secret-config -o jsonpath="{.data.port}" | base64 -d)
-export DB_NAME=$( kubectl get secret --namespace default postgres-secret-config -o jsonpath="{.data.name}" | base64 -d)
-export DB_USER=$( kubectl get secret --namespace default postgres-secret-config -o jsonpath="{.data.user}" | base64 -d)
-export DB_PASS=$( kubectl get secret --namespace default postgres-secret-config -o jsonpath="{.data.password}" | base64 -d)
-
-
-k apply -f migrate.yaml
-k logs -f migrate
-k delete po migrate
 ```
 
 Delete (in order)
@@ -67,3 +92,6 @@ k delete pvc postgres-pv-claim
 k delete pv postgres-pv-volume
 k delete cm db-credentials
 ```
+
+
+More info at blog https://www.gmhafiz.com/blog/deploy-applications-in-kubernetes/#database
